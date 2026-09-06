@@ -16,10 +16,10 @@ const seed = {
     { id: 'u-teacher', name: '周老师', email: 'teacher@campus.local', password: '123456', role: 'teacher', department: '学生工作处' }
   ],
   activities: [
-    { id: 'a-1', title: '秋日草坪音乐会', summary: '和朋友一起听现场、看落日，给忙碌的学期留一段轻松的空白。', category: '文艺', date: '2026-09-19', time: '18:30', location: '中央草坪', organizer: '校学生会', capacity: 300, participants: ['u-student'], status: 'published', cover: 'sunset' },
-    { id: 'a-2', title: '新生夜跑打卡', summary: '沿着环湖路线慢跑 3 公里，认识新同学，也熟悉校园的夜色。', category: '体育', date: '2026-09-16', time: '19:00', location: '北门广场', organizer: '体育部', capacity: 120, participants: [], status: 'published', cover: 'run' },
-    { id: 'a-3', title: '旧书交换市集', summary: '带一本闲置好书来，换走下一段阅读旅程。', category: '公益', date: '2026-09-23', time: '11:30', location: '图书馆南门', organizer: '青年志愿者协会', capacity: 80, participants: [], status: 'published', cover: 'book' },
-    { id: 'a-4', title: '校园摄影漫游', summary: '从建筑、光影和路过的人里，找到属于你的校园镜头。', category: '社团', date: '2026-09-28', time: '15:00', location: '艺术楼大厅', organizer: '光影社', capacity: 30, participants: [], status: 'draft', cover: 'photo' }
+    { id: 'a-1', title: '秋日草坪音乐会', summary: '和朋友一起听现场、看落日，给忙碌的学期留一段轻松的空白。', category: '文艺', date: '2026-09-19', time: '18:30', location: '中央草坪', organizer: '校学生会', capacity: 300, participants: [], status: 'published', cover: 'campus-gate-main' },
+    { id: 'a-2', title: '新生夜跑打卡', summary: '沿着环湖路线慢跑 3 公里，认识新同学，也熟悉校园的夜色。', category: '体育', date: '2026-09-16', time: '19:00', location: '北门广场', organizer: '体育部', capacity: 120, participants: [], status: 'published', cover: 'campus-lane-summer' },
+    { id: 'a-3', title: '旧书交换市集', summary: '带一本闲置好书来，换走下一段阅读旅程。', category: '公益', date: '2026-09-23', time: '11:30', location: '图书馆南门', organizer: '青年志愿者协会', capacity: 80, participants: [], status: 'published', cover: 'campus-library' },
+    { id: 'a-4', title: '校园摄影漫游', summary: '从建筑、光影和路过的人里，找到属于你的校园镜头。', category: '社团', date: '2026-09-28', time: '15:00', location: '艺术楼大厅', organizer: '光影社', capacity: 30, participants: [], status: 'draft', cover: 'campus-train' }
   ]
 };
 
