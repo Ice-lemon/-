@@ -38,6 +38,11 @@ function body(req) {
   return new Promise((resolve, reject) => { let raw = ''; req.on('data', c => raw += c); req.on('end', () => { try { resolve(raw ? JSON.parse(raw) : {}); } catch (e) { reject(e); } }); });
 }
 function safeUser(user) { const { password, ...rest } = user; return rest; }
+function findUser(db, userId) { return db.users.find(user => user.id === userId); }
+function requireRole(db, userId, role) {
+  const user = findUser(db, userId);
+  return user && user.role === role ? user : null;
+}
 
 const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') return json(res, 204, {});
@@ -48,6 +53,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/auth/register' && req.method === 'POST') {
       const input = await body(req);
       if (!input.name || !input.email || !input.password || !input.role) return json(res, 400, { message: '请填写完整信息' });
+      if (!['student', 'teacher'].includes(input.role)) return json(res, 400, { message: '身份类型无效' });
       if (db.users.some(u => u.email === input.email)) return json(res, 409, { message: '该邮箱已注册' });
       const user = { id: id('u'), name: input.name, email: input.email, password: input.password, role: input.role, department: input.department || '未填写' };
       db.users.push(user); saveDb(db); return json(res, 201, { user: safeUser(user) });
@@ -67,6 +73,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/api/activities' && req.method === 'POST') {
       const input = await body(req);
+      if (!requireRole(db, input.userId, 'teacher')) return json(res, 403, { message: '只有活动组织教师可以发布活动' });
       if (!input.title || !input.date || !input.time || !input.location || !input.capacity) return json(res, 400, { message: '请补充活动标题、时间、地点和人数' });
       const activity = { id: id('a'), title: input.title, summary: input.summary || '期待在校园里和你见面。', category: input.category || '其他', date: input.date, time: input.time, location: input.location, organizer: input.organizer || '学生工作处', capacity: Number(input.capacity), participants: [], status: input.status || 'published', cover: input.cover || 'default' };
       db.activities.unshift(activity); saveDb(db); return json(res, 201, { activity: { ...activity, participantCount: 0 } });
@@ -75,7 +82,7 @@ const server = http.createServer(async (req, res) => {
     if (join && req.method === 'POST') {
       const input = await body(req); const activity = db.activities.find(a => a.id === join[1]);
       if (!activity) return json(res, 404, { message: '活动不存在' });
-      if (!input.userId) return json(res, 400, { message: '请先登录' });
+      if (!requireRole(db, input.userId, 'student')) return json(res, 403, { message: '只有学生可以报名活动' });
       if (activity.participants.includes(input.userId)) return json(res, 409, { message: '你已经报名过了' });
       if (activity.participants.length >= activity.capacity) return json(res, 409, { message: '活动名额已满' });
       activity.participants.push(input.userId); saveDb(db); return json(res, 200, { activity: { ...activity, participantCount: activity.participants.length } });
@@ -83,7 +90,17 @@ const server = http.createServer(async (req, res) => {
     const detail = url.pathname.match(/^\/api\/activities\/([^/]+)$/);
     if (detail && req.method === 'PUT') {
       const activity = db.activities.find(a => a.id === detail[1]); if (!activity) return json(res, 404, { message: '活动不存在' });
-      const input = await body(req); Object.assign(activity, input, { capacity: Number(input.capacity || activity.capacity) }); saveDb(db); return json(res, 200, { activity: { ...activity, participantCount: activity.participants.length } });
+      const input = await body(req);
+      if (!requireRole(db, input.userId, 'teacher')) return json(res, 403, { message: '只有活动组织教师可以管理活动' });
+      delete input.userId;
+      Object.assign(activity, input, { capacity: Number(input.capacity || activity.capacity) }); saveDb(db); return json(res, 200, { activity: { ...activity, participantCount: activity.participants.length } });
+    }
+    const userActivities = url.pathname.match(/^\/api\/users\/([^/]+)\/activities$/);
+    if (userActivities && req.method === 'GET') {
+      const user = findUser(db, userActivities[1]);
+      if (!user) return json(res, 404, { message: '用户不存在' });
+      const activities = db.activities.filter(activity => activity.participants.includes(user.id));
+      return json(res, 200, { activities: activities.map(activity => ({ ...activity, participantCount: activity.participants.length })) });
     }
     if (detail && req.method === 'GET') {
       const activity = db.activities.find(a => a.id === detail[1]); return activity ? json(res, 200, { activity: { ...activity, participantCount: activity.participants.length } }) : json(res, 404, { message: '活动不存在' });
