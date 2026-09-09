@@ -4,28 +4,39 @@ import argparse
 import json
 from pathlib import Path
 
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance
 
 
 VARIANTS = {
-    "campus-gate-main": ("gate", "#f1a67f", 0.16),
-    "campus-library": ("library", "#84c8ba", 0.13),
-    "campus-train": ("train", "#e8ad69", 0.14),
-    "campus-lane": ("lane", "#74b5b1", 0.13),
-    "campus-panorama": ("panorama", "#a7d38d", 0.10),
-    "campus-gate-dusk": ("gate", "#334e82", 0.26),
-    "campus-library-night": ("library", "#52618c", 0.23),
-    "campus-train-retro": ("train", "#c9825d", 0.22),
-    "campus-lane-summer": ("lane", "#80b96a", 0.18),
-    "campus-panorama-evening": ("panorama", "#dd9b76", 0.20),
+    "campus-gate-main": ("gate", "day"),
+    "campus-library": ("library", "day"),
+    "campus-train": ("train", "day"),
+    "campus-lane": ("lane", "day"),
+    "campus-panorama": ("panorama", "day"),
+    "campus-gate-dusk": ("gate", "dusk"),
+    "campus-library-night": ("library", "night"),
+    "campus-train-retro": ("train", "retro"),
+    "campus-lane-summer": ("lane", "summer"),
+    "campus-panorama-evening": ("panorama", "evening"),
 }
 
+# The five supplied illustrations are already in the requested clean 16-bit style.
 SOURCE_NAMES = {
-    "gate": "5c6ca776a54cddb00a078f3d6f8108eb.jpg",
-    "library": "b22a8dfd28574b3f9b2e8474c6c50f87.jpg",
-    "train": "a9a0332e73bf940c5a5ec3cdd8593ec2.jpg",
-    "lane": "d7f4df238dec4ec328782938983d4bcc.jpg",
-    "panorama": "40be7ced0a179ffbe175f7845ba3f439.jpg",
+    "gate": "0aebd01ef48df7b52ffe007a77b5f30f.jpg",
+    "library": "829f475ecb2fca92a5dd73987b1ead42.jpg",
+    "train": "18b84f5a522c23275017a1724aae66d5.jpg",
+    "lane": "0cedfc0cd20aad901036233efb75b5df.jpg",
+    "panorama": "b3c91d1d46922276bcd2c0cf63436a0e.jpg",
+}
+
+# Variants preserve the source art and only apply restrained color grading.
+TONE_STYLES = {
+    "day": ("#ffffff", 0.00, 1.00),
+    "dusk": ("#5e659c", 0.16, 0.92),
+    "night": ("#243c72", 0.25, 0.78),
+    "retro": ("#d58b63", 0.13, 0.96),
+    "summer": ("#91c95d", 0.10, 1.06),
+    "evening": ("#de8d74", 0.14, 0.94),
 }
 
 
@@ -41,35 +52,34 @@ def crop_to_ratio(image: Image.Image, ratio: float = 16 / 9) -> Image.Image:
     return image.crop((0, top, width, top + crop_height))
 
 
-def pixelize(source: Path, output: Path, tint: str, amount: float) -> None:
+def pixelize(source: Path, output: Path, tone: str) -> None:
     image = crop_to_ratio(Image.open(source).convert("RGB"))
-    small = image.resize((192, 108), Image.Resampling.LANCZOS)
-    small = ImageEnhance.Color(small).enhance(1.12)
-    small = ImageEnhance.Contrast(small).enhance(1.04)
-    small = small.quantize(colors=56, method=Image.Quantize.MEDIANCUT).convert("RGB")
-    tinted = Image.new("RGB", small.size, tint)
-    small = Image.blend(small, tinted, amount)
-    small = small.filter(ImageFilter.UnsharpMask(radius=0.7, percent=110, threshold=3))
-    final = small.resize((1280, 720), Image.Resampling.NEAREST)
+    image = image.resize((1280, 720), Image.Resampling.LANCZOS)
+    tint, amount, brightness = TONE_STYLES[tone]
+    if amount:
+        image = Image.blend(image, Image.new("RGB", image.size, tint), amount)
+    if brightness != 1:
+        image = ImageEnhance.Brightness(image).enhance(brightness)
     output.parent.mkdir(parents=True, exist_ok=True)
-    final.save(output, optimize=True)
+    image.save(output, optimize=True, quality=95)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Create pixel-art campus assets from supplied campus photos.")
+    parser = argparse.ArgumentParser(description="Prepare supplied HJTU 16-bit campus illustrations.")
     parser.add_argument("--source-dir", type=Path, default=Path(r"C:\Users\ASUS\Desktop"))
     parser.add_argument("--output-dir", type=Path, default=Path("public/assets/campus-pixel"))
+    parser.add_argument("--style-reference", type=Path, default=None, help="Compatibility option; source illustrations define the style.")
     args = parser.parse_args()
     manifest = {}
-    for name, (source_key, tint, amount) in VARIANTS.items():
+    for name, (source_key, tone) in VARIANTS.items():
         source = args.source_dir / SOURCE_NAMES[source_key]
         if not source.exists():
             raise FileNotFoundError(f"Missing source image: {source}")
         output = args.output_dir / f"{name}.png"
-        pixelize(source, output, tint, amount)
+        pixelize(source, output, tone)
         manifest[name] = f"/assets/campus-pixel/{output.name}"
     (args.output_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Generated {len(manifest)} pixel assets in {args.output_dir}")
+    print(f"Generated {len(manifest)} supplied-style pixel assets in {args.output_dir}")
 
 
 if __name__ == "__main__":

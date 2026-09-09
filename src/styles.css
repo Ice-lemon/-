@@ -11,4 +11,33 @@
 .hero-note{z-index:1}
 .cover-image{background-size:cover;background-position:center}
 .cover-image:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,35,56,.05),rgba(13,35,56,.24))}
+
+/* Keep the hero copy and its primary action anchored at every desktop width. */
+.hero{height:auto;min-height:275px}
+.hero-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;flex:0 1 49%;width:auto;min-width:0}
+.hero-btn{align-self:flex-start;position:relative;z-index:3}
+.hero-art{min-width:0;min-height:275px}
+.activity-section{scroll-margin-top:24px}
+
+.notification-wrap{position:relative}
+.icon-btn.active{background:#eef3f4;border-color:#d6e3e2;color:var(--orange)}
+.notification-dot.is-read{display:none}
+.notification-panel{position:absolute;right:0;top:45px;width:300px;max-width:calc(100vw - 34px);padding:15px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 42px rgba(16,36,62,.16);z-index:12}
+.notification-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid #edf0f3}
+.notification-heading>div{display:flex;flex-direction:column;gap:3px}
+.notification-heading strong{font-size:13px;color:var(--ink)}
+.notification-heading span{font-size:10px;color:var(--muted)}
+.notification-close{width:24px;height:24px;display:grid;place-items:center;border-radius:6px;color:#8b98a8}
+.notification-close:hover{background:#f2f5f6;color:var(--ink)}
+.notification-item{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid #edf0f3}
+.notification-item>div{min-width:0}
+.notification-item strong{display:block;font-size:11px;color:var(--ink);margin-bottom:4px}
+.notification-item p{font-size:10px;line-height:1.5;color:var(--muted);margin:0}
+.notification-badge{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:#fff0e9;color:#d16d4b;flex:none}
+.notification-badge.green{background:#e8f5ef;color:#4d9a7d}
+.notification-action{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:12px;padding:9px 10px;border-radius:7px;background:var(--navy);color:#fff;font-size:11px;font-weight:700}
+.notification-action:hover{background:#1b385c}
+
+@media (max-width:1000px){.hero-copy{flex:0 1 56%;width:auto}}
+@media (max-width:720px){.hero-copy{display:block;width:100%;min-height:245px}.hero-art{min-height:170px}}
 .cover-image .cover-shape{z-index:1}
